@@ -9,7 +9,6 @@ use Exception;
 /**
  * Behavior use to generate formated autonumber.
  * Use at ActiveRecord behavior
- * 
  * ~~~
  * public function behavior()
  * {
@@ -35,13 +34,10 @@ class Behavior extends \yii\behaviors\AttributeBehavior
     public $digit;
 
     /**
-     * @var mixed Optional. 
      */
-    public $group;
 
     /**
      * @var boolean If set `true` number will genarate unique for owner classname.
-     * Default `true`. 
      */
     public $unique = true;
 
@@ -71,26 +67,19 @@ class Behavior extends \yii\behaviors\AttributeBehavior
         } else {
             $value = is_callable($this->value) ? call_user_func($this->value, $event) : $this->value;
         }
-        $group = md5(serialize([
             'class' => $this->unique ? get_class($this->owner) : false,
-            'group' => $this->group,
             'attribute' => $this->attribute,
             'value' => $value
         ]));
         do {
             $repeat = false;
             try {
-                $model = AutoNumber::findOne($group);
                 if ($model) {
-                    $number = $model->number + 1;
                 } else {
                     $model = new AutoNumber([
-                        'group' => $group
                     ]);
-                    $number = 1;
                 }
                 $model->update_time = time();
-                $model->number = $number;
                 $model->save(false);
             } catch (Exception $exc) {
                 if ($exc instanceof StaleObjectException) {
@@ -101,7 +90,6 @@ class Behavior extends \yii\behaviors\AttributeBehavior
             }
         } while ($repeat);
         if ($value === null) {
-            return $number;
         } else {
             return str_replace('?', $this->digit ? sprintf("%0{$this->digit}d", $number) : $number, $value);
         }

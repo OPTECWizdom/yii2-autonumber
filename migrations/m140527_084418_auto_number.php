@@ -21,11 +21,11 @@ class m140527_084418_auto_number extends \yii\db\Migration
         }
 
         $this->createTable('{{%auto_number}}', [
-            'group' => Schema::TYPE_STRING . '(32) NOT NULL',
-            'number' => Schema::TYPE_INTEGER,
+            'group_id' => Schema::TYPE_STRING . '(32) NOT NULL',
+            'id_number' => Schema::TYPE_INTEGER,
             'optimistic_lock' => Schema::TYPE_INTEGER,
             'update_time' => Schema::TYPE_INTEGER,
-            'PRIMARY KEY ([[group]])'
+            'PRIMARY KEY ([[group_id]])'
         ], $tableOptions);
     }
 

@@ -1,24 +1,23 @@
 <?php
 
 namespace mdm\autonumber;
-
 use yii\db\ActiveRecord;
 use yii\db\StaleObjectException;
 
 /**
  * Validator use to fill autonumber
- * 
+ *
  * Use to fill attribute with formatet autonumber.
- * 
+ *
  * Usage at [[$owner]] rules()
- * 
+ *
  * ~~~
  * return [
  *     [['sales_num'], 'autonumber', 'format'=>'SA.'.date('Ymd').'?'],
  *     ...
  * ]
  * ~~~
- * 
+ *
  * @author Misbahul D Munir <misbahuldmunir@gmail.com>
  * @since 1.0
  */
@@ -35,7 +34,7 @@ class AutonumberValidator extends \yii\validators\Validator
      *     return $value;
      * }
      * ```
-     * 
+     *
      * @see [[Behavior::$value]]
      */
     public $format;
@@ -48,7 +47,7 @@ class AutonumberValidator extends \yii\validators\Validator
     /**
      * @var mixed
      */
-    public $group;
+    public $group_id;
 
     /**
      * @var boolean
@@ -101,29 +100,29 @@ class AutonumberValidator extends \yii\validators\Validator
             $value = is_callable($this->format) ? call_user_func($this->format, $object, $attribute) : $this->format;
         }
 
-        $group = md5(serialize([
+        $group_id = md5(serialize([
             'class' => $this->unique ? get_class($object) : false,
-            'group' => $this->group,
+            'group_id' => $this->group_id,
             'attribute' => $attribute,
             'value' => $value
         ]));
 
-        $model = AutoNumber::findOne($group);
+        $model = AutoNumber::findOne($group_id);
         if ($model) {
-            $number = $model->number + 1;
+            $id_number = $model->id_number + 1;
         } else {
             $model = new AutoNumber([
-                'group' => $group
+                'group_id' => $group_id
             ]);
-            $number = 1;
+            $id_number = 1;
         }
         $model->update_time = time();
-        $model->number = $number;
+        $model->id_number = $id_number;
 
         if ($value === null) {
-            $object->$attribute = $number;
+            $object->$attribute = $id_number;
         } else {
-            $object->$attribute = str_replace('?', $this->digit ? sprintf("%0{$this->digit}d", $number) : $number, $value);
+            $object->$attribute = str_replace('?', $this->digit ? sprintf("%0{$this->digit}d", $id_number) : $id_number, $value);
         }
 
         self::$_executed[$id] = true;
