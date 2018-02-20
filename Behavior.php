@@ -1,7 +1,6 @@
 <?php
 
 namespace mdm\autonumber;
-
 use yii\db\StaleObjectException;
 use yii\db\BaseActiveRecord;
 use Exception;
@@ -9,6 +8,7 @@ use Exception;
 /**
  * Behavior use to generate formated autonumber.
  * Use at ActiveRecord behavior
+ *
  * ~~~
  * public function behavior()
  * {
@@ -34,10 +34,13 @@ class Behavior extends \yii\behaviors\AttributeBehavior
     public $digit;
 
     /**
+     * @var mixed Optional.
      */
+    public $group_id;
 
     /**
      * @var boolean If set `true` number will genarate unique for owner classname.
+     * Default `true`.
      */
     public $unique = true;
 
@@ -67,19 +70,26 @@ class Behavior extends \yii\behaviors\AttributeBehavior
         } else {
             $value = is_callable($this->value) ? call_user_func($this->value, $event) : $this->value;
         }
+        $group_id = md5(serialize([
             'class' => $this->unique ? get_class($this->owner) : false,
+            'group_id' => $this->group_id,
             'attribute' => $this->attribute,
             'value' => $value
         ]));
         do {
             $repeat = false;
             try {
+                $model = AutoNumber::findOne($group_id);
                 if ($model) {
+                    $id_number = $model->id_number + 1;
                 } else {
                     $model = new AutoNumber([
+                        'group_id' => $group_id
                     ]);
+                    $id_number = 1;
                 }
                 $model->update_time = time();
+                $model->id_number = $id_number;
                 $model->save(false);
             } catch (Exception $exc) {
                 if ($exc instanceof StaleObjectException) {
@@ -90,6 +100,7 @@ class Behavior extends \yii\behaviors\AttributeBehavior
             }
         } while ($repeat);
         if ($value === null) {
+            return $id_number;
         } else {
             return str_replace('?', $this->digit ? sprintf("%0{$this->digit}d", $number) : $number, $value);
         }
